@@ -1,0 +1,16 @@
+<script src="http://localhost:3000/socket.io/socket.io.js"></script>
+<script>
+    var gameroom = io.connect('http://localhost:3000/gameroom'),
+        room2 = io.connect('http://localhost:3000/room2');
+
+    gameroom.on('connect', function () {
+        gameroom.emit('hi room 1 this is to demonstrate that i can emit to just room 1!');
+    });
+    gameroom.on('a message', function (msg) {
+       console.log(msg);
+    });
+
+    room2.on('news', function () {
+        room2.emit('hi room 2 this is to demonstrate that i can emit to just room 2!');
+    });
+</script>

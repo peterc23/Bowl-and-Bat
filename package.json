@@ -1,0 +1,20 @@
+{
+  "author": "Peter and Usman <peterc23@gmail.com> (kaheichan.com)",
+  "name": "pcuk",
+  "description": "Peter and Usman",
+  "version": "0.0.0",
+  "homepage": "pcuk.kaheichan.com",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:peterc23/pcuk.git"
+  },
+  "main": "server.js",
+  "scripts": {
+    "test": "nodeunit test.js"
+  },
+  "engines": {
+    "node": "~0.6.5"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

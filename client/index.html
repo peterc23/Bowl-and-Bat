@@ -1,16 +1,44 @@
 <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+<script src="../resources/lobbyEvents.js"></script>
 <script>
-    var gameroom = io.connect('http://localhost:3000/gameroom'),
-        room2 = io.connect('http://localhost:3000/room2');
+    var socket = io.connect('http://localhost:3000/lobby');
+    // listener, whenever the server emits 'updaterooms', this updates the room the client is in
+    socket.on(lobbyEvents.LOBBY_GAME_STATUS, function(rooms) {
+        console.log("triggered");
+        console.log(rooms);
+        $('#rooms').empty();
+        $.each(rooms, function(key, value) {
+            if(value.name == 'lobby'){
+                $('#rooms').append('<div>' + value.name + ' : ' + value.players + '</div>');
+            }
+            else {
+                $('#rooms').append('<div><a href="#" onclick="enterGameRoom(\''+value.name+'\')">' + value.name + ' : ' + value.players + '/2' +'</a></div>');
+            }
+        });
+    });
+    function getStatus(){
+        var username = prompt ("please enter your username");
+        if (username == null || username == ""){
+         alert("please enter a username");
+        }else{
+            socket.emit(lobbyEvents.PLAYER_JOINED, username);
+        }
+    }
+    // on connection to server, ask for user's name with an anonymous callback
+    function enterGameRoom(room){
+        console.log(room);
+        window.location.href = 'gameroom.html?room='+room;
+    }
 
-    gameroom.on('connect', function () {
-        gameroom.emit('hi room 1 this is to demonstrate that i can emit to just room 1!');
-    });
-    gameroom.on('a message', function (msg) {
-       console.log(msg);
+    // on load of page
+    $(function(){
     });
 
-    room2.on('news', function () {
-        room2.emit('hi room 2 this is to demonstrate that i can emit to just room 2!');
-    });
 </script>
+        <body onload="javascript:getStatus()">
+<div style="float:left;width:100px;border-right:1px solid black;height:300px;padding:10px;overflow:scroll-y;">
+    <b>ROOMS</b>
+    <div id="rooms"></div>
+</div>
+</body>

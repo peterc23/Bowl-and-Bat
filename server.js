@@ -1,26 +1,43 @@
 var app = require('express').createServer(),
+    http = require('http');
     gameroomEvents = require('./resources/gameroomEvents.js'),
-    io = require('socket.io').listen(app);
+    lobbyEvents = require('./resources/lobbyEvents.js'),
+    nodestatic = require('node-static'),
+    socketio = require('socket.io');
 
-app.listen(3000);
+var staticFiles = new(nodestatic.Server)('.');
+var httpServer = http.createServer(function (request, response) {
+    console.log("rahhh");
+    request.addListener('end', function () {
+        console.log("sigh");
+        staticFiles.serve(request, response);
+    });
+}).listen(3000);
 
-app.get('/', function (req, res) {
-    res.sendfile(__dirname + '/client/index.html');
-});
+var io = socketio.listen(httpServer);
 // usernames which are currently connected to the game
 var usernames = {};
 // rooms which are currently available in game
-var rooms = ['room1','room2','room3'];
+var roomnames = ['lobby','room1','room2','room3'];
+var rooms = new Array(roomnames.length);
+for(var i = 0; i < roomnames.length; i++){
+    var room = {};
+    room.name = roomnames[i];
+    room.players = 0;
+    rooms[i] = room;
+
+    console.log(rooms);
+}
 
 var gameroom = io
-    .of('/gameroom')
+    .of(gameroomEvents.GAME_ROOM_URL)
     .on('connection', function (socket) {
 
         socket.emit(gameroomEvents.GAME_ROOM_STATUS, { availableRooms: rooms.length, gameRooms :rooms
         });
         //******************** PLAYER JOINED THE GAME/ROOM*****************8888
         socket.on(gameroomEvents.GAME_JOIN, function(message){
-            if(rooms[message.gameroom].players > 2 ){
+            if(rooms[message.gameroom].players >= 2 ){
                 socket.emit(gameroomEvents.GAME_JOIN_FAILED, {status: 'full'});
             }else{
             // store the username in the socket session for this client
@@ -53,7 +70,8 @@ var gameroom = io
             io.sockets.emit(gameroomEvents.GAME_DISCONNECT, socket.username);
             rooms[socket.room].players = rooms[socket.room].players - 1;
             // echo globally that this client has left
-            socket.broadcast.to(socket.room).emit(gameroomEvents.GAME_PLAYER_UPDATE, {username: socket.username, room: socket.gameroom, status: gameroomEvents.GAME_PLAYER_LEFT});
+            socket.broadcast.to(socket.room).emit(gameroomEvents.GAME_PLAYER_UPDATE,
+                {username: socket.username, room: socket.gameroom, status: gameroomEvents.GAME_PLAYER_LEFT});
             socket.leave(socket.room);
         });
 
@@ -61,7 +79,36 @@ var gameroom = io
 
 
 var lobby = io
-    .of('/lobby')
+    .of(lobbyEvents.LOBBY_URL)
     .on('connection', function (socket) {
-        socket.emit('', { news: 'item' });
+        //socket.emit(lobbyEvents.LOBBY_GAME_STATUS, rooms);
+        // when the client emits 'adduser', this listens and executes
+        socket.on(lobbyEvents.PLAYER_JOINED, function(username){
+            for (var i=0; i<usernames.length; i++){
+                if(username == usernames[i].username){
+                    socket.emit(lobbyEvents.LOBBY_JOIN_ERROR,{status: 'USERNAME_CONFLICT'})
+                }else{
+                }
+            }
+            // store the username in the socket session for this client
+            socket.username = username;
+            // store the room name in the socket session for this client
+            socket.room = 'lobby';
+            rooms[0].players ++;
+            // add the client's username to the global list
+            usernames[username] = username;
+            // send client to room 1
+            socket.join('lobby');
+            socket.emit(lobbyEvents.LOBBY_GAME_STATUS, rooms);
+        });
+
+
+        // when the user disconnects.. perform this
+        socket.on('disconnect', function(){
+            // remove the username from global usernames list
+            delete usernames[socket.username];
+            rooms[0].players --;
+            socket.emit(lobbyEvents.LOBBY_GAME_STATUS, rooms);
+            socket.leave(socket.room);
+        });
     });

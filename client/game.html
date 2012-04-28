@@ -5,8 +5,58 @@
 	<title>Test</title>
 	<script type="text/javascript" src="../limejs/closure/closure/goog/base.js"></script>
 	<script type="text/javascript" src="game.js"></script>
+
+    <script src="../socket.io/socket.io.js"></script>
+    <script src="../resources/gameroomEvents.js"></script>
+    <script src="../resources/globalProperties.js"></script>
+    <script type="text/javascript">
+        var urlParams = {};
+        //on page load parse url
+        (function () {
+            var e,
+                    a = /\+/g,  // Regex for replacing addition symbol with a space
+                    r = /([^&=]+)=?([^&]*)/g,
+                    d = function (s) { return decodeURIComponent(s.replace(a, " ")); },
+                    q = window.location.search.substring(1);
+
+            while (e = r.exec(q))
+                urlParams[d(e[1])] = d(e[2]);
+        })();
+        console.log(urlParams);
+
+
+        var socket = io.connect(globalProperties.SERVER_URL + globalProperties.GAME_ROOM_URL);
+        // listener, whenever the server emits 'updaterooms', this updates the room the client is in
+        socket.on(lobbyEvents.LOBBY_GAME_STATUS, function(rooms) {
+            console.log("triggered");
+            console.log(rooms);
+            $('#rooms').empty();
+            $.each(rooms, function(key, value) {
+                if(value.name == 'lobby'){
+                    $('#rooms').append('<div>' + value.name + ' : ' + value.players + '</div>');
+                }
+                else {
+                    $('#rooms').append('<div><a href="#" onclick="enterGameRoom(\''+value.name+'\')">' + value.name + ' : ' + value.players + '/2' +'</a></div>');
+                }
+            });
+        });
+        function joinGameroom(room){
+            if (room == null || room == ""){
+                var room = prompt("please enter a room id (e.g. 1,2,3)");
+            }else{
+                console.log(room);
+                console.log(gameroomEvents.GAME_JOIN);
+                socket.emit(gameroomEvents.GAME_JOIN, room);
+            }
+        }
+        // on connection to server, ask for user's name with an anonymous callback
+        function enterGameRoom(room){
+            console.log(room);
+            window.location.href = 'game.html?room='+room;
+        }
+    </script>
 </head>
 
-<body onload="game.start()"></body>
+<body onload="joinGameroom(urlParams), game.start()"></body>
 
 </html>

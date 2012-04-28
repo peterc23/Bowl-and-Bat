@@ -1,7 +1,4 @@
 (function(exports){
-    //this file specifies all the shared events between all the files.
-    exports.SERVER_URL = 'http://192.168.1.8:1234';
-    exports.GAME_ROOM_URL = '/gameroom';
 
     //****General Game Functions
     exports.GAME_JOIN = 'GAME_JOIN';

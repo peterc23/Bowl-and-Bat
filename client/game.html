@@ -27,6 +27,8 @@
 
         var socket = io.connect(globalProperties.SERVER_URL + globalProperties.GAME_ROOM_URL);
         // listener, whenever the server emits 'updaterooms', this updates the room the client is in
+
+        /*
         socket.on(lobbyEvents.LOBBY_GAME_STATUS, function(rooms) {
             console.log("triggered");
             console.log(rooms);
@@ -39,7 +41,7 @@
                     $('#rooms').append('<div><a href="#" onclick="enterGameRoom(\''+value.name+'\')">' + value.name + ' : ' + value.players + '/2' +'</a></div>');
                 }
             });
-        });
+        });*/
         function joinGameroom(room){
             if (room == null || room == ""){
                 var room = prompt("please enter a room id (e.g. 1,2,3)");
@@ -48,11 +50,6 @@
                 console.log(gameroomEvents.GAME_JOIN);
                 socket.emit(gameroomEvents.GAME_JOIN, room);
             }
-        }
-        // on connection to server, ask for user's name with an anonymous callback
-        function enterGameRoom(room){
-            console.log(room);
-            window.location.href = 'game.html?room='+room;
         }
     </script>
 </head>
